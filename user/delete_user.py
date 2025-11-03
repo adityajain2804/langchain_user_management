@@ -1,6 +1,6 @@
 from fastapi import APIRouter
 from pydantic import BaseModel
-from register.create_user import users_db
+from database import users_collection
 
 router = APIRouter(prefix="/delete", tags=["User Actions"])
 
@@ -9,8 +9,7 @@ class DeleteUser(BaseModel):
 
 @router.delete("/")
 def delete_user(data: DeleteUser):
-    for user in users_db:
-        if user["username"] == data.username:
-            users_db.remove(user)
-            return {"message": "User deleted successfully!"}
+    result = users_collection.delete_one({"username": data.username})
+    if result.deleted_count > 0:
+        return {"message": "User deleted successfully!"}
     return {"error": "User not found!"}

@@ -1,6 +1,6 @@
 from fastapi import APIRouter
 from pydantic import BaseModel
-from register.create_user import users_db
+from database import users_collection
 
 router = APIRouter(prefix="/add", tags=["User Actions"])
 
@@ -10,5 +10,9 @@ class User(BaseModel):
 
 @router.post("/")
 def add_user(user: User):
-    users_db.append(user.dict())
-    return {"message": "User added successfully!", "total_users": len(users_db)}
+    if users_collection.find_one({"username": user.username}):
+        return {"error": "User already exists!"}
+    
+    users_collection.insert_one(user.dict())
+    total = users_collection.count_documents({})
+    return {"message": "User added successfully!", "total_users": total}

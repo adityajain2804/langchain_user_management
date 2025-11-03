@@ -1,10 +1,8 @@
 from fastapi import APIRouter
 from pydantic import BaseModel
+from database import users_collection
 
 router = APIRouter(prefix="/signup", tags=["Register"])
-
-# Temporary in-memory user database
-users_db = []
 
 class User(BaseModel):
     username: str
@@ -12,8 +10,9 @@ class User(BaseModel):
 
 @router.post("/")
 def create_user(user: User):
-    for u in users_db:
-        if u["username"] == user.username:
-            return {"error": "Username already exists!"}
-    users_db.append(user.dict())
-    return {"message": "User created successfully!", "user": user}
+    existing_user = users_collection.find_one({"username": user.username})
+    if existing_user:
+        return {"error": "Username already exists!"}
+    
+    users_collection.insert_one(user.dict())
+    return {"message": "User created successfully!", "user": user.dict()}

@@ -1,6 +1,6 @@
 from fastapi import APIRouter
 from pydantic import BaseModel
-from register.create_user import users_db
+from database import users_collection
 
 router = APIRouter(prefix="/login", tags=["Register"])
 
@@ -10,7 +10,10 @@ class Login(BaseModel):
 
 @router.post("/")
 def login_user(login: Login):
-    for user in users_db:
-        if user["username"] == login.username and user["password"] == login.password:
-            return {"message": "Login successful!"}
+    user = users_collection.find_one({
+        "username": login.username,
+        "password": login.password
+    })
+    if user:
+        return {"message": "Login successful!"}
     return {"error": "Invalid username or password!"}
